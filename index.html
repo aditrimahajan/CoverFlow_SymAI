@@ -1,0 +1,489 @@
+<title>CoverFlow Live Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: control bar on top, then three panes — manager's phone | CoverFlow console | staff phones. Stacks on narrow screens. */
+:root{
+  --bg:#F6F1E7;
+  --surface:#FFFDF8;
+  --surface-2:#EFE7D8;
+  --ink:#12332E;
+  --ink-soft:#4C625D;
+  --line:#DCD2BF;
+  --accent:#E8893A;
+  --accent-ink:#9A4A12;
+  --on-accent:#1B140C;
+  --phone:#12332E;
+  --phone-2:#1C4840;
+  --phone-ink:#F4EFE4;
+  --phone-soft:#B9D2CA;
+  --ok:#2E7D5B;
+  --ok-bg:#DCEFE4;
+  --bad:#B4412F;
+  --bad-bg:#F6DED7;
+  --warn:#9A6A08;
+  --warn-bg:#F7E9C8;
+  --font-display:'Rubik', 'Trebuchet MS', Arial, sans-serif;
+  --font-body:'Public Sans', 'Segoe UI', Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1F1C; --surface:#152B27; --surface-2:#1C3833; --ink:#EDE7DA; --ink-soft:#A9BFB8; --line:#2C4A44;
+    --accent:#F2994A; --accent-ink:#F5B57A; --on-accent:#1B140C;
+    --phone:#08130F; --phone-2:#1A3A33; --phone-ink:#F4EFE4; --phone-soft:#A9C7BE;
+    --ok:#6FCF9F; --ok-bg:#173A2C; --bad:#F08A76; --bad-bg:#40221C; --warn:#E9B949; --warn-bg:#3A2E12;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1F1C; --surface:#152B27; --surface-2:#1C3833; --ink:#EDE7DA; --ink-soft:#A9BFB8; --line:#2C4A44;
+  --accent:#F2994A; --accent-ink:#F5B57A; --on-accent:#1B140C;
+  --phone:#08130F; --phone-2:#1A3A33; --phone-ink:#F4EFE4; --phone-soft:#A9C7BE;
+  --ok:#6FCF9F; --ok-bg:#173A2C; --bad:#F08A76; --bad-bg:#40221C; --warn:#E9B949; --warn-bg:#3A2E12;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 40px}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
+button{font:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+/* Top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.brand h1{font-size:28px;font-weight:700;letter-spacing:-0.01em}
+.brand h1 span{color:var(--accent-ink)}
+.venue{color:var(--ink-soft);font-size:14px}
+.clock{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.clock .time{font-family:var(--font-display);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
+.tag{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--surface-2);color:var(--ink-soft)}
+
+.controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 20px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.controls label{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.controls textarea{width:100%;min-height:46px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);color:var(--ink);font:inherit}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 16px;border-radius:10px;font-weight:600}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Main grid */
+.stage{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:1180px){.stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.console{grid-column:1 / -1;order:-1}}
+@media (max-width:700px){.stage{grid-template-columns:minmax(0,1fr)}}
+.pane-title{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 8px}
+
+/* Phones */
+.phone{background:var(--phone);color:var(--phone-ink);border-radius:28px;padding:16px 14px 18px;border:1px solid var(--phone-2);display:flex;flex-direction:column;gap:10px;min-height:200px}
+.phone-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--phone-soft)}
+.phone-head strong{color:var(--phone-ink);font-weight:600}
+.lock{font-family:var(--font-display);font-size:56px;font-weight:300;line-height:1;text-align:center;font-variant-numeric:tabular-nums;padding:6px 0 0}
+.lock-date{text-align:center;font-size:13px;color:var(--phone-soft);margin-top:-4px}
+.notes{display:flex;flex-direction:column;gap:8px}
+.note{background:var(--phone-2);border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:3px;animation:pop .35s ease-out}
+.note .from{display:flex;justify-content:space-between;font-size:12px;color:var(--phone-soft)}
+.note .from b{color:var(--phone-ink);font-weight:600}
+.note p{margin:0;font-size:14px}
+.note.good{box-shadow:inset 0 0 0 2px var(--ok)}
+.note.alert{box-shadow:inset 0 0 0 2px var(--accent)}
+.empty{font-size:13px;color:var(--phone-soft);text-align:center;padding:10px 0}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+
+.staff-col{display:flex;flex-direction:column;gap:12px}
+@media (max-width:1180px) and (min-width:701px){.staff-col{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+.mini{min-height:0;border-radius:22px;padding:12px}
+.offer{background:var(--phone-2);border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:8px;animation:pop .35s ease-out}
+.offer p{margin:0;font-size:14px}
+.offer .meta{font-size:12px;color:var(--phone-soft)}
+.offer-btns{display:flex;gap:8px}
+.offer-btns button{flex:1;border-radius:9px;padding:9px;border:0;font-weight:600}
+.accept{background:var(--accent);color:var(--on-accent)}
+.decline{background:transparent;color:var(--phone-ink);box-shadow:inset 0 0 0 1px var(--phone-soft)}
+.real-badge{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--accent);color:var(--on-accent);padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.phone.real{box-shadow:0 0 0 2px var(--accent)}
+.real-hint{margin:0;font-size:12px;color:var(--phone-soft)}
+.offer-state{font-size:13px;font-weight:600;padding:8px 10px;border-radius:9px;background:var(--phone)}
+
+/* Console */
+.console{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-size:17px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+
+.gap-shift{display:flex;flex-direction:column;gap:2px}
+.gap-shift .big{font-family:var(--font-display);font-size:22px;font-weight:600}
+.gap-shift .sub{color:var(--ink-soft);font-size:14px}
+.pill{font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.pill.neutral{background:var(--surface-2);color:var(--ink-soft)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+
+.rules{display:flex;flex-wrap:wrap;gap:8px}
+.rule{font-size:13px;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
+.rule b{font-weight:600}
+
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.step .n{font-size:12px;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.step .t{font-weight:600;font-size:14px}
+.step .s{font-size:12px;color:var(--ink-soft)}
+.step.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.step.done{background:var(--ok-bg);border-color:transparent}
+.step.done .s{color:var(--ok)}
+.step.fail{background:var(--warn-bg);border-color:transparent}
+.step.fail .s{color:var(--warn)}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr.absent td{color:var(--ink-soft)}
+.mark{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600}
+.mark.y{color:var(--ok)}
+.mark.n{color:var(--bad)}
+.mark.p{color:var(--ink-soft);font-weight:400}
+.res{font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px}
+.res.y{background:var(--ok-bg);color:var(--ok)}
+.res.n{background:var(--bad-bg);color:var(--bad)}
+
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}
+.log li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;font-size:14px}
+.log time{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+.brief{border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.brief.ok{background:var(--ok-bg)}
+.brief.warn{background:var(--warn-bg)}
+.brief h3{font-size:16px}
+.brief dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;margin:0;font-size:14px}
+.brief dt{color:var(--ink-soft)}
+.brief dd{margin:0;font-weight:600}
+.foot{font-size:12px;color:var(--ink-soft);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Cover<span>Flow</span></h1>
+      <span class="venue">Harbour Café · Saturday 18 October · Plug-in for Tanda</span>
+    </div>
+    <div class="clock">
+      <span class="tag">Demo environment · simulated roster</span>
+      <span class="time" id="clock" aria-live="polite">6:02am</span>
+    </div>
+  </header>
+
+  <section class="controls" aria-label="Demo controls">
+    <div>
+      <label for="msg">Jess's text to Maria (edit it to test how CoverFlow reads it)</label>
+      <textarea id="msg">Hey Maria, I'm really sorry, but I'm sick and can't make my 7am opening shift today.</textarea>
+    </div>
+    <div class="btns">
+      <button class="btn primary" id="run" type="button">Send 6:03am sick text</button>
+      <button class="btn" id="reset" type="button">Reset demo</button>
+    </div>
+  </section>
+
+  <main class="stage">
+    <section aria-label="Maria's phone">
+      <p class="pane-title">Maria · manager's phone</p>
+      <div class="phone" id="maria"></div>
+    </section>
+
+    <section class="console" aria-label="CoverFlow console">
+      <div class="card">
+        <div class="row">
+          <div class="gap-shift">
+            <span class="sub">Opening shift · Sat 7:00am–3:00pm · Barista / opener</span>
+            <span class="big" id="gapWho">Rostered: Jess</span>
+          </div>
+          <span class="pill neutral" id="status">All shifts covered</span>
+        </div>
+        <div class="steps" id="steps"></div>
+      </div>
+
+      <div class="card">
+        <div class="row"><h2>Maria's rules, set once</h2><span class="tag">Hard-coded checks</span></div>
+        <div class="rules">
+          <span class="rule"><b>Trained</b> to open</span>
+          <span class="rule"><b>Available</b> Saturdays</span>
+          <span class="rule"><b>No clash</b> with own shift</span>
+          <span class="rule"><b>Max 38h</b> per week</span>
+          <span class="rule"><b>Offer everyone</b> eligible at once</span>
+          <span class="rule"><b>First to accept</b> gets the shift</span>
+          <span class="rule"><b>Everyone declines</b> → alert me</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row"><h2>Who can cover?</h2><span class="tag" id="eligCount">Waiting</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Staff</th><th>Trained</th><th>Available</th><th>No clash</th><th>Hours</th><th>Result</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="briefCard" hidden>
+        <div id="brief"></div>
+      </div>
+
+      <div class="card">
+        <h2>Activity</h2>
+        <ul class="log" id="log" aria-live="polite"></ul>
+      </div>
+    </section>
+
+    <section aria-label="Staff phones">
+      <p class="pane-title">Staff phones</p>
+      <div class="staff-col" id="staffPhones"></div>
+    </section>
+  </main>
+  <p class="foot">Demo environment with simulated Tanda roster data. Not connected to a live Tanda account.</p>
+</div>
+
+<script>
+(function(){
+  var SHIFT = {start: 7*60, end: 15*60, label: "7:00am–3:00pm"};
+  var STAFF = [
+    {id:"sam",   name:"Sam",   role:"Barista",    trained:true,  available:true,  shift:null,           hours:22},
+    {id:"priya", name:"Priya", role:"Barista",    trained:true,  available:true,  shift:null,           hours:30},
+    {id:"leo",   name:"Leo",   role:"All-rounder",trained:true,  available:true,  shift:null,           hours:16},
+    {id:"grace", name:"Grace", role:"Barista",    trained:true,  available:true,  shift:null,           hours:18},
+    {id:"noah",  name:"Noah",  role:"Supervisor", trained:true,  available:true,  shift:null,           hours:28},
+    {id:"mia",   name:"Mia",   role:"Floor",      trained:false, available:true,  shift:null,           hours:20},
+    {id:"tom",   name:"Tom",   role:"Barista",    trained:true,  available:true,  shift:[12*60, 20*60], hours:24},
+    {id:"ava",   name:"Ava",   role:"Barista",    trained:true,  available:false, shift:null,           hours:12},
+    {id:"ben",   name:"Ben",   role:"Barista",    trained:true,  available:true,  shift:null,           hours:34}
+  ];
+
+  var S, timers = [], poller = null, REAL = {}, SERVER = false, DRY = true;
+  function api(path, body){
+    if(!SERVER) return Promise.resolve(null);
+    return fetch(path, body===undefined ? {} : {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)})
+      .then(function(r){return r.json();}).catch(function(){return null;});
+  }
+  function startPolling(){
+    stopPolling();
+    poller = setInterval(function(){
+      api("/api/status").then(function(st){
+        if(!st || S.phase!=="offering") return;
+        if(st.winner && S.offers[st.winner]==="sent"){ accept(st.winner, true); return; }
+        (st.declined||[]).forEach(function(id){ if(S.offers[id]==="sent") decline(id, true); });
+      });
+    }, 1500);
+  }
+  function stopPolling(){ if(poller){clearInterval(poller); poller=null;} }
+
+  function fresh(){
+    return {phase:"idle", time:6*60+2, log:[], revealed:0, offers:{}, offerAt:null, acceptedBy:null, maria:[], steps:["idle","idle","idle","idle"], stepText:["Waiting","Waiting","Waiting","Waiting"]};
+  }
+  function fmt(m){var h=Math.floor(m/60), mm=m%60, ap=h>=12?"pm":"am"; h=h%12||12; return h+":"+(mm<10?"0":"")+mm+ap;}
+  function $(id){return document.getElementById(id);}
+  function later(fn, ms){timers.push(setTimeout(fn, ms));}
+  function log(text){S.log.unshift({t:S.time, text:text});}
+  function check(p){
+    var clash = p.shift && p.shift[0] < SHIFT.end && p.shift[1] > SHIFT.start;
+    var hoursOk = p.hours + 8 <= 38;
+    var reasons = [];
+    if(!p.trained) reasons.push("not trained to open");
+    if(!p.available) reasons.push("unavailable Saturdays");
+    if(clash) reasons.push("rostered 12:00–8:00pm");
+    if(!hoursOk) reasons.push("would hit "+(p.hours+8)+"h");
+    return {trained:p.trained, available:p.available, noClash:!clash, hoursOk:hoursOk, ok:reasons.length===0, reasons:reasons};
+  }
+  function eligible(){return STAFF.filter(function(p){return check(p).ok;});}
+
+  function parse(text){
+    var t = text.toLowerCase().replace(/’/g,"'");
+    var absent = /(sick|unwell|\bill\b|vomit|fever|covid|flu|can'?t make|cannot make|won'?t make|can'?t come|cant come|not coming|can'?t work|emergency)/.test(t);
+    var m = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/);
+    var start = null;
+    if(m){var h=(+m[1])%12; if(m[3]==="pm") h+=12; start=h*60+(m[2]?+m[2]:0);}
+    return {absent:absent, start:start};
+  }
+
+  function setStep(i, state, text){S.steps[i]=state; S.stepText[i]=text;}
+
+  function run(){
+    if(S.phase!=="idle") return;
+    var text = $("msg").value.trim() || "(empty message)";
+    S.phase = "reading"; S.time = 6*60+3;
+    S.maria.push({kind:"msg", from:"Jess (Opener)", t:S.time, text:text});
+    log("Message from Jess received");
+    setStep(0,"active","Reading message…");
+    render();
+    later(function(){
+      var r = parse(text);
+      if(!r.absent){
+        setStep(0,"fail","No absence found");
+        log("Read message: no absence detected, so no action taken");
+        S.phase = "ignored"; render(); return;
+      }
+      var note = (r.start===null || r.start===SHIFT.start) ? "Matched Jess's 7:00am opening shift" : "No shift at that time, matched Jess's next shift (7:00am)";
+      setStep(0,"done","Absence: Jess, 7:00am");
+      log("Read message: Jess is unwell and can't work. "+note);
+      S.phase = "checking";
+      setStep(1,"active","Checking "+STAFF.length+" staff…");
+      render();
+      STAFF.forEach(function(p, i){
+        later(function(){ S.revealed = i+1; render(); }, 400*(i+1));
+      });
+      later(function(){
+        var el = eligible();
+        setStep(1,"done", el.length+" of "+STAFF.length+" eligible");
+        log("Checked Maria's rules: "+el.length+" eligible, "+(STAFF.length-el.length)+" filtered out");
+        S.time = 6*60+4; S.offerAt = S.time; S.phase = "offering";
+        el.forEach(function(p){ S.offers[p.id] = "sent"; });
+        setStep(2,"done","Sent to all "+el.length+" at once");
+        setStep(3,"active","First to accept gets it");
+        log("Offer sent to every eligible staff member at the same time: "+el.map(function(p){return p.name;}).join(", "));
+        var realNames = el.filter(function(p){return REAL[p.id];}).map(function(p){return p.name;});
+        if(SERVER && realNames.length) log((DRY ? "Dry run: would text " : "Real SMS sent to ")+realNames.join(", "));
+        api("/api/offer", {staff: el.map(function(p){return p.id;})});
+        startPolling();
+        render();
+      }, 400*(STAFF.length+1)+300);
+    }, 1100);
+  }
+
+  function accept(id, fromServer){
+    if(S.phase!=="offering" || S.offers[id]!=="sent") return;
+    stopPolling();
+    if(!fromServer) api("/api/accept", {staff:id});
+    var who = STAFF.filter(function(p){return p.id===id;})[0];
+    S.time = Math.max(S.time, S.offerAt+1);
+    S.acceptedBy = id; S.phase = "covered";
+    Object.keys(S.offers).forEach(function(k){
+      if(k===id) S.offers[k]="accepted"; else if(S.offers[k]==="sent") S.offers[k]="closed";
+    });
+    setStep(3,"done","Covered by "+who.name);
+    log(who.name+(fromServer?" replied YES by text,":"")+" accepted first and gets the shift. Other offers closed, roster updated (demo)");
+    S.maria.push({kind:"good", from:"CoverFlow", t:S.time, text:"Your 7am opening shift has been covered by "+who.name+". Accepted at "+fmt(S.time)+". No action needed."});
+    render();
+  }
+  function decline(id, fromServer){
+    if(S.phase!=="offering" || S.offers[id]!=="sent") return;
+    if(!fromServer) api("/api/decline", {staff:id});
+    var who = STAFF.filter(function(p){return p.id===id;})[0];
+    S.offers[id] = "declined";
+    log(who.name+" declined"+(fromServer?" by text":""));
+    var open = Object.keys(S.offers).filter(function(k){return S.offers[k]==="sent";});
+    if(open.length===0){ escalate("Every eligible staff member declined"); }
+    render();
+  }
+  function escalate(reason){
+    stopPolling();
+    S.phase = "escalated";
+    Object.keys(S.offers).forEach(function(k){ if(S.offers[k]==="sent") S.offers[k]="expired"; });
+    setStep(3,"fail","Escalated to Maria");
+    log(reason+". Escalated to Maria");
+    S.maria.push({kind:"alert", from:"CoverFlow · action needed", t:S.time, text:"Your 7am opening shift is still uncovered. "+reason+". Open CoverFlow to choose the next step."});
+  }
+  function reset(){
+    timers.forEach(clearTimeout); timers = []; stopPolling();
+    api("/api/reset", {});
+    S = fresh(); render();
+  }
+
+  var CHECK = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CROSS = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  function mark(v, show){ if(!show) return '<span class="mark p">…</span>'; return v ? '<span class="mark y">'+CHECK+'Yes</span>' : '<span class="mark n">'+CROSS+'No</span>'; }
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+  function render(){
+    $("clock").textContent = fmt(S.time);
+    $("run").disabled = S.phase!=="idle";
+
+    // Status
+    var st = $("status"), who = $("gapWho");
+    var map = {
+      idle:["neutral","All shifts covered"], ignored:["neutral","No action needed"], reading:["warn","Reading message"],
+      checking:["bad","Uncovered"], offering:["warn","Offers out"], covered:["ok","Covered"], escalated:["bad","Escalated to Maria"]
+    };
+    st.className = "pill "+map[S.phase][0]; st.textContent = map[S.phase][1];
+    if(S.phase==="covered"){ var p = STAFF.filter(function(x){return x.id===S.acceptedBy;})[0]; who.textContent = "Covered by "+p.name+" (was Jess)"; }
+    else if(S.phase==="idle"||S.phase==="ignored"||S.phase==="reading"){ who.textContent = "Rostered: Jess"; }
+    else { who.textContent = "Jess is out sick · needs cover"; }
+
+    // Steps
+    var names = ["Read the message","Check eligibility","Send offers","Confirm or escalate"];
+    $("steps").innerHTML = names.map(function(n,i){
+      return '<div class="step '+S.steps[i]+'"><span class="n">Step '+(i+1)+'</span><span class="t">'+n+'</span><span class="s">'+esc(S.stepText[i])+'</span></div>';
+    }).join("");
+
+    // Eligibility rows
+    var started = S.phase!=="idle" && S.phase!=="reading" && S.phase!=="ignored";
+    var rows = '<tr class="absent"><td><b>Jess</b> · Opener</td><td colspan="4">Out sick, shift needs cover</td><td><span class="res n">Absent</span></td></tr>';
+    rows += STAFF.map(function(p,i){
+      var show = started && S.revealed > i, c = check(p);
+      var res = show ? (c.ok ? '<span class="res y">Eligible</span>' : '<span class="res n" title="'+esc(c.reasons.join(", "))+'">'+esc(c.reasons[0])+'</span>') : '<span class="mark p">…</span>';
+      return '<tr><td><b>'+p.name+'</b> · '+p.role+'</td><td>'+mark(c.trained,show)+'</td><td>'+mark(c.available,show)+'</td><td>'+mark(c.noClash,show)+'</td><td>'+(show?('<span class="mark '+(c.hoursOk?"y":"n")+'">'+p.hours+'h → '+(p.hours+8)+'h</span>'):'<span class="mark p">…</span>')+'</td><td>'+res+'</td></tr>';
+    }).join("");
+    $("rows").innerHTML = rows;
+    var done = started && S.revealed >= STAFF.length;
+    $("eligCount").textContent = done ? eligible().length+" of "+STAFF.length+" eligible" : (started ? "Checking…" : "Waiting");
+
+    // Brief
+    var bc = $("briefCard");
+    if(S.phase==="covered"){
+      var a = STAFF.filter(function(x){return x.id===S.acceptedBy;})[0];
+      bc.hidden = false;
+      $("brief").innerHTML = '<div class="brief ok"><h3>Morning brief for Maria</h3><dl><dt>Shift</dt><dd>Opening, '+SHIFT.label+'</dd><dt>Absent</dt><dd>Jess (unwell)</dd><dt>Replacement</dt><dd>'+a.name+'</dd><dt>Offers sent</dt><dd>'+fmt(S.offerAt)+' to all '+eligible().length+' eligible staff</dd><dt>Accepted</dt><dd>'+fmt(S.time)+'</dd><dt>Roster</dt><dd>Updated in demo environment</dd></dl></div>';
+    } else if(S.phase==="escalated"){
+      bc.hidden = false;
+      $("brief").innerHTML = '<div class="brief warn"><h3>Escalated to Maria</h3><dl><dt>Shift</dt><dd>Opening, '+SHIFT.label+'</dd><dt>Tried</dt><dd>'+eligible().map(function(p){return p.name;}).join(", ")+'</dd><dt>Outcome</dt><dd>No acceptance. Maria alerted at '+fmt(S.time)+'</dd></dl></div>';
+    } else { bc.hidden = true; }
+
+    // Log
+    $("log").innerHTML = S.log.length ? S.log.map(function(l){return '<li><time>'+fmt(l.t)+'</time><span>'+esc(l.text)+'</span></li>';}).join("") : '<li><time>—</time><span>Nothing yet. Send the sick text to start.</span></li>';
+
+    // Maria's phone
+    var notes = S.maria.slice().reverse().map(function(n){
+      return '<div class="note '+(n.kind==="good"?"good":n.kind==="alert"?"alert":"")+'"><span class="from"><b>'+esc(n.from)+'</b><span>'+fmt(n.t)+'</span></span><p>'+esc(n.text)+'</p></div>';
+    }).join("");
+    $("maria").innerHTML = '<div class="phone-head"><strong>Maria</strong><span>Harbour Café</span></div><div class="lock">'+fmt(S.time).replace(/am|pm/,"")+'</div><div class="lock-date">Saturday 18 October</div><div class="notes">'+(notes || '<p class="empty">No notifications</p>')+'</div>';
+
+    // Staff phones
+    var el = eligible();
+    $("staffPhones").innerHTML = el.map(function(p){
+      var o = S.offers[p.id], body;
+      if(!o){ body = '<p class="empty">No messages</p>'; }
+      else if(o==="sent"){
+        body = '<div class="offer"><span class="meta">CoverFlow · '+fmt(S.offerAt)+'</span><p><b>Shift available today:</b> opening barista, '+SHIFT.label+' at Harbour Café. Can you take it?</p><div class="offer-btns"><button class="accept" type="button" data-act="accept" data-id="'+p.id+'">Accept shift</button><button class="decline" type="button" data-act="decline" data-id="'+p.id+'">Decline</button></div></div>';
+      }
+      else {
+        var msg = {accepted:"You're confirmed for 7:00am. Thanks, "+p.name+"!", closed:"This shift has been filled. Thanks for responding.", declined:"You declined this shift.", expired:"This offer has expired."}[o];
+        body = '<div class="offer"><span class="meta">CoverFlow</span><p class="offer-state">'+esc(msg)+'</p></div>';
+      }
+      if(REAL[p.id] && o==="sent") body += '<p class="real-hint">'+(DRY?'Dry run: no text sent':'Text sent. Reply YES or NO on the real phone, or tap here')+'</p>';
+      return '<div class="phone mini'+(REAL[p.id]?' real':'')+'"><div class="phone-head"><strong>'+p.name+(REAL[p.id]?' <span class="real-badge">Real phone</span>':'')+'</strong><span>'+p.role+' · '+p.hours+'h this week</span></div>'+body+'</div>';
+    }).join("");
+  }
+
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-act]");
+    if(!b) return;
+    if(b.getAttribute("data-act")==="accept") accept(b.getAttribute("data-id"));
+    else decline(b.getAttribute("data-id"));
+  });
+  $("run").addEventListener("click", run);
+  $("reset").addEventListener("click", reset);
+
+  S = fresh(); render();
+  fetch("/api/config").then(function(r){return r.json();}).then(function(c){
+    SERVER = true; DRY = c.dryRun;
+    (c.realStaff||[]).forEach(function(id){ REAL[id] = true; });
+    var tag = document.querySelector(".clock .tag");
+    tag.textContent = DRY ? "Dry run · no real texts" : "Live SMS · simulated roster";
+    render();
+  }).catch(function(){ /* opened without the server: on-screen demo only */ });
+})();
+</script>
