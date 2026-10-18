@@ -6,16 +6,6 @@ CoverFlow is a plug-in for rostering tools like Tanda that coordinates last-minu
 
 Built at the Sym AI Open 2026 hackathon (Macquarie University) by CoverFlow Team (Aditri, Udit, Troy, Ozan)
 
-***The problem***
-
-It's 6:03am. Maria runs a café. Her opener texts that she's sick and can't make the 7am shift. Before her day has started, Maria has to open the rostering app, find the shift, contact staff, chase replies and check the shift is filled.
-
-We interviewed 17 businesses around Macquarie Centre. About 70% raised rostering issues.
-Absenteeism costs Australian businesses an estimated $33 billion a year, and 90% of absences are short-term and unplanned (Direct Health Solutions research, via Scale Suite, April 2026).
-Hospitality has the highest rate of unplanned absence of any industry: 11.9 days per worker per year (same source).
-
-Tools like Tanda already manage rosters and support shift replacements. What they leave to the manager is the coordination: starting the request, chasing people, and checking it worked. The problem isn't finding the right buttons. It's having to be the person who presses them.
-
 ***What CoverFlow does***
 
 1. Reads the absence message and matches it to the affected shift.
