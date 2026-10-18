@@ -37,8 +37,10 @@ Bot -->	Telegram Bot API --> Delivers offers with Accept / Decline buttons to re
 
 _Running it_
 1. Requirements: Python 3 and a Telegram bot token from @BotFather.
-Instructions:
+2. Instructions:
+   
 pip3 install flask python-dotenv
+
 python3 telegram_app.py
 
 Then open the local host site url. (available in terminal command when 'python3 telegram_app.py' is executed)
